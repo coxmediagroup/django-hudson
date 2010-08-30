@@ -48,13 +48,13 @@ class Command(BaseCommand):
 
         #TODO: Make lint work and with external rc file
         if 'pylint' in tasks:
-            pylint().handle(output_file=path.join(output_dir,'pylint.report'), 
+            pylint().handle(output_file=path.join(output_dir,'pylint.report'),
                                 *test_labels)
 
         if 'coverage' in tasks:
             coverage.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
             coverage.start()
-        
+
         failures = 0
         if 'tests' in tasks:
             test_runner = XmlDjangoTestSuiteRunner(output_dir=output_dir, interactive=interactive, verbosity=verbosity)
