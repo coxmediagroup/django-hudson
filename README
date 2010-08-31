@@ -4,6 +4,10 @@ django-hudson
 Plug and play continuous integration with django and hudson
 
 
+Testing
+-------
+run tests/manage.sh to run the test suite
+
 Authors
 -------
 Mikhail Podgurskiy <kmmbvnr@gmail.com>
