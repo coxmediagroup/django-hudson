@@ -65,7 +65,7 @@ class Command(BaseCommand):
             coverage.stop()
 
         modules = [ module for name, module in sys.modules.items() \
-                    if self.want_module(name, module, test_labels, excludes)
+                    if hasattr(module, "__file__") and self.want_module(module, test_labels, excludes)
         ]
         morfs = [ self.src(m.__file__) for m in modules if self.src(m.__file__).endswith(".py")]
 
@@ -83,10 +83,8 @@ class Command(BaseCommand):
         if failures:
             sys.exit(bool(failures))
 
-    def want_module(self, modname, mod, test_labels=[], excludes=[]):
-        #No cover if it ain't got a file
-        if not hasattr(mod, "__file__"): return False
-
+    def want_module(self, module, test_labels=[], excludes=[]):
+        modname = module.__name__
         #If it's not being explicity excluded
         for exclude in excludes:
             if exclude and exclude in modname:
