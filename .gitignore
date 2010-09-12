@@ -1,5 +1,6 @@
 .cache
 .ve
+ve
 .coverage
 *.pyc
 reports
