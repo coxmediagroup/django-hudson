@@ -1,13 +1,18 @@
-# -*- coding: utf-8 -*-
-import sys, os, pprint
-from os import path
+import os
+import pprint
+import sys
+
 import coverage
+
 from optparse import make_option
+
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+
 from django_hudson.management.commands.lint import Command as pylint
-from django_hudson.xmlrunner import XmlDjangoTestSuiteRunner
 from django_hudson.management.commands.xmltest import patch_for_test_db_setup
+from django_hudson.xmlrunner import XmlDjangoTestSuiteRunner
+
 
 class Command(BaseCommand):
     help = "Run ci process"
@@ -37,7 +42,7 @@ class Command(BaseCommand):
                         ['pylint', 'coverage', 'tests'])
 
         output_dir=options.get('output_dir')
-        if not path.exists(output_dir):
+        if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
         if not test_labels:
@@ -48,7 +53,7 @@ class Command(BaseCommand):
 
         #TODO: Make lint work and with external rc file
         if 'pylint' in tasks:
-            pylint().handle(output_file=path.join(output_dir,'pylint.report'),
+            pylint().handle(output_file=os.path.join(output_dir,'pylint.report'),
                                 *test_labels)
 
         if 'coverage' in tasks:
@@ -64,6 +69,10 @@ class Command(BaseCommand):
         if 'coverage' in tasks:
             coverage.stop()
 
+        # Fail fast, and exit with a usable status code
+        if failures:
+            raise CommandError('Aww, your tests failed. Sad panda :(')
+
         modules = [ module for name, module in sys.modules.items() \
                     if hasattr(module, "__file__") and self.want_module(module, test_labels, excludes)
         ]
@@ -78,7 +87,7 @@ class Command(BaseCommand):
             pprint.pprint(morfs)
 
         if 'coverage' in tasks:
-            coverage._the_coverage.xml_report(morfs, outfile=path.join(output_dir,'coverage.xml'))
+            coverage._the_coverage.xml_report(morfs, outfile=os.path.join(output_dir,'coverage.xml'))
 
         if failures:
             sys.exit(bool(failures))
