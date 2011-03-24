@@ -42,6 +42,7 @@ import os
 import sys
 import time
 import unittest
+import logging
 from unittest import TestResult, _TextTestResult, TextTestRunner
 from cStringIO import StringIO
 
@@ -369,21 +370,51 @@ class XMLTestRunner(TextTestRunner):
 
         return result
 
+class HookProcessor(object):
+    """ medley's test runner needs this too in order to act in a way
+        that is compatable with dj-hudson
+    """
+    def report(self, msg, **kargs):
+        """ boring helper:
+              print some stuff if verbosity is flipped on
+        """
+        if self.verbosity:
+            print msg.format(**kargs)
+    def process_hooks(self):
+        """ processes any hooks found mentioned in the settings file.
+            TODO: currently hooks are assumed to be callables.  need to allow importable strings?
+            NOTE: results are unused at this time, but maybe there is a reason to track them later.
+        """
+        from django.conf import settings
+        hooks = getattr(settings, 'DJANGO_HUDSON_HOOKS', [])
+        results = []
+        for hook in hooks:
+            try: results.append(hook())
+            except Exception, err:
+                msg = "Error executing hook: {H}\n  Exception follows:\n{exc}"
+                msg = msg.format(H=str(hook), exc=str(err))
+                self.report(msg)
+                logging.error(msg)
+            else:
+                self.report("Executed djhudson hook: {f}".format(f=hook))
+        return results
 
-class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner):
+class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner, HookProcessor):
     def __init__(self, output_dir='reports', **kwargs):
         super(XmlDjangoTestSuiteRunner, self).__init__(**kwargs)
         self.output_dir = output_dir
-
-    def report(self, msg, **kargs):
-        """ helper: print some stuff if verbosity is flipped on """
-        if self.verbosity:
-            print msg.format(**kargs)
 
     def run_suite(self, suite, **kwargs):
         return XMLTestRunner(verbose = self.verbosity > 1,
                              output = self.output_dir).run(suite)
 
+    def setup_databases(self, *args, **kargs):
+        """ database setup takes a long time, so just in case any of
+            the hooks happen to have a lengthy OOB bootstrap (eg solr),
+            we need to run them here too.
+        """
+        self.process_hooks()
+        super(XmlDjangoTestSuiteRunner, self).setup_databases(*args, **kargs)
 
     def build_suite(self, test_labels, extra_tests=None, **kwargs):
         """ Default behaviour is augmented to improve test discovery """
