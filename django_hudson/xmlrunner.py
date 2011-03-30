@@ -399,9 +399,8 @@ class HookProcessor(object):
         results = []
         for hook in hooks:
             if isinstance(hook, StringType):
-                # Let's hope it's a dotpath..
-                name = hook.split('.')[-1]
-                hook_mod = hook.split('.')[:-1]
+                name = hook.split('.')[-1]                # callable name comes at the end,
+                hook_mod = '.'.join(hook.split('.')[:-1]) # up until then it's modules
                 try:
                     hook = getattr(_import(hook_mod), name)
                 except Exception, err:
