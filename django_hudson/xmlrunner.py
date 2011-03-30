@@ -380,21 +380,37 @@ class HookProcessor(object):
         """
         if self.verbosity:
             print msg.format(**kargs)
+
     def process_hooks(self):
         """ processes any hooks found mentioned in the settings file.
             TODO: currently hooks are assumed to be callables.  need to allow importable strings?
             NOTE: results are unused at this time, but maybe there is a reason to track them later.
         """
         from django.conf import settings
+        from types import StringType
+        def panic(action, hook, err):
+            msg = "Error {action} hook: {H}\n  Exception follows:\n{exc}"
+            msg = msg.format(action=action, H=str(hook), exc=str(err))
+            self.report(msg)
+            logging.error(msg)
+
+
         hooks = getattr(settings, 'DJANGO_HUDSON_HOOKS', [])
         results = []
         for hook in hooks:
+            if isinstance(hook, StringType):
+                # Let's hope it's a dotpath..
+                name = hook.split('.')[-1]
+                hook_mod = hook.split('.')[:-1]
+                try:
+                    hook = getattr(_import(hook_mod), name)
+                except Exception, err:
+                    panic('importing', hook, err)
+                    continue
+
             try: results.append(hook())
             except Exception, err:
-                msg = "Error executing hook: {H}\n  Exception follows:\n{exc}"
-                msg = msg.format(H=str(hook), exc=str(err))
-                self.report(msg)
-                logging.error(msg)
+                panic('executing', hook, err)
             else:
                 self.report("Executed djhudson hook: {f}".format(f=hook))
         return results
@@ -469,3 +485,14 @@ def get_apps(name=None):
         if modname == name:
             matches.append(modyool)
     return list(set(matches))
+
+def _import(name):
+    """ dear __import__,
+          I'm breaking up with you.
+          You never work the way I expect.
+    """
+    mod = __import__(name)
+    components = name.split('.')
+    for comp in components[1:]:
+        mod = getattr(mod, comp)
+    return mod
