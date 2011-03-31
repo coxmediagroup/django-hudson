@@ -47,10 +47,7 @@ from cStringIO import StringIO
 
 from django.test.simple import DjangoTestSuiteRunner
 from django.test.simple import build_suite, get_tests
-
-from django.db.models.loading import get_app
 from django.db.models.loading import get_apps as app_getter
-
 
 class _TestInfo(object):
     """This class is used to keep useful information about the execution of a
@@ -375,11 +372,6 @@ class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner):
         super(XmlDjangoTestSuiteRunner, self).__init__(**kwargs)
         self.output_dir = output_dir
 
-    def report(self, msg, **kargs):
-        """ helper: print some stuff if verbosity is flipped on """
-        if self.verbosity:
-            print msg.format(**kargs)
-
     def run_suite(self, suite, **kwargs):
         return XMLTestRunner(verbose = self.verbosity > 1,
                              output = self.output_dir).run(suite)
@@ -395,37 +387,34 @@ class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner):
         for test_label in test_labels:
             all_apps = get_apps(test_label)
             if len(all_apps) > 1:
-                leftover_apps = [ app for app in all_apps if app!=get_app(test_label) ]
+
+                leftover_apps = all_apps[1:]
                 for app_module in leftover_apps:
                     # Check to see if a separate 'tests' module
                     # exists parallel to the "models" module
                     test_module = get_tests(app_module)
                     if test_module:
-                        new_suite = unittest.defaultTestLoader.loadTestsFromModule(test_module)
-                        if new_suite._tests:
-                            suite.addTests(new_suite._tests)
-                            msg       = "Discovered {N} extra tests for shadowed appname: {A}"
-                            msg_kargs = dict(N=len(new_suite._tests), A=app_module.__name__)
+                        new_guy = unittest.defaultTestLoader.loadTestsFromModule(test_module)
+                        if new_guy._tests:
+                            msg = "Discovered {N} extra tests for shadowed appname: {A}"
+                            msg = msg.format(N=len(new_guy._tests),A=app_module.__name__)
+                            print(msg)
+                            suite.addTest(new_guy)
                         else:
                             msg = "Discovered shadowed appname \"{A}\" but no tests were found"
-                            msg_kargs = dict(A=app_module.__name__)
-                        self.report(msg, **msg_kargs)
+                            print(msg.format(A=app_module.__name__))
 
         return suite
 
 
-def get_apps(name=None):
-    """ gets all the apps matching <name> from app-cache, instead
-        of just retrieving the first one.  when name==None, acts
-        in a way that is backwards compatible with django.db.get_apps
-
+def get_apps(name):
+    """ gets all the apps matching <name> from app-cache,
+        instead of just retrieving the first one.
         EXAMPLE:
-           get_apps('weather') ->
-             [ <module 'medley.weather.models'>,
-               <module 'ellington.weather.models'> ]
+           >>> get_apps('weather')
+           [ <module 'medley.weather.models'>, <module 'ellington.weather.models'> ]
     """
     apps    = app_getter()
-    if not name: return apps
     matches = []
     for modyool in apps:
         modname = modyool.__name__
