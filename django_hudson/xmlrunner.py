@@ -391,7 +391,8 @@ class HookProcessor(object):
         def panic(action, hook, err):
             msg = "Error {action} hook: {H}\n  Exception follows:\n{exc}"
             msg = msg.format(action=action, H=str(hook), exc=str(err))
-            self.report(msg)
+            print msg
+            #self.report(msg)
             logging.error(msg)
 
 
@@ -411,7 +412,8 @@ class HookProcessor(object):
             except Exception, err:
                 panic('executing', hook, err)
             else:
-                self.report("Executed djhudson hook: {f}".format(f=hook))
+                #self.report("Executed djhudson hook: {f}".format(f=hook))
+                print "Executed djhudson hook: {f}".format(f=hook)
         return results
 
 
