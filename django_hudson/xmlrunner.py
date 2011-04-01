@@ -386,6 +386,10 @@ class HookProcessor(object):
             TODO: currently hooks are assumed to be callables.  need to allow importable strings?
             NOTE: results are unused at this time, but maybe there is a reason to track them later.
         """
+        import sys,platform
+        print >> sys.stderr, 'sanity check: does djhudson show whats on stderr?'
+        print 'processing hooks for host "' + str(platform.node()) + '"'
+
         from django.conf import settings
         from types import StringType
         def panic(action, hook, err):
@@ -414,6 +418,7 @@ class HookProcessor(object):
             else:
                 #self.report("Executed djhudson hook: {f}".format(f=hook))
                 print "Executed djhudson hook: {f}".format(f=hook)
+        print "after running every hook, got results:",results
         return results
 
 
