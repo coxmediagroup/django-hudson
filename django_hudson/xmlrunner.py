@@ -414,6 +414,7 @@ class HookProcessor(object):
                 self.report("Executed djhudson hook: {f}".format(f=hook))
         return results
 
+
 class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner, HookProcessor):
     def __init__(self, output_dir='reports', **kwargs):
         super(XmlDjangoTestSuiteRunner, self).__init__(**kwargs)
