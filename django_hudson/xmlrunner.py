@@ -41,8 +41,10 @@ if __name__ == '__main__':
 import os
 import sys
 import time
+import platform
 import unittest
 import logging
+from types import StringType
 from unittest import TestResult, _TextTestResult, TextTestRunner
 from cStringIO import StringIO
 
@@ -383,15 +385,13 @@ class HookProcessor(object):
 
     def process_hooks(self):
         """ processes any hooks found mentioned in the settings file.
-            TODO: currently hooks are assumed to be callables.  need to allow importable strings?
             NOTE: results are unused at this time, but maybe there is a reason to track them later.
         """
-        import sys,platform
-        print >> sys.stderr, 'sanity check: does djhudson show whats on stderr?'
+
+        #print >> sys.stderr, 'sanity check: does djhudson show whats on stderr?'
         print 'processing hooks for host "' + str(platform.node()) + '"'
 
         from django.conf import settings
-        from types import StringType
         def panic(action, hook, err):
             msg = "Error {action} hook: {H}\n  Exception follows:\n{exc}"
             msg = msg.format(action=action, H=str(hook), exc=str(err))
@@ -411,6 +411,8 @@ class HookProcessor(object):
                 except Exception, err:
                     panic('importing', hook, err)
                     continue
+            else:
+                raise TypeError, "HookProcessor.process_hooks: Elements in DJANGO_HUDSON_HOOKS should be importable strings."
 
             try: results.append(hook())
             except Exception, err:
