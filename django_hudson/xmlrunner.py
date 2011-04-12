@@ -439,7 +439,7 @@ class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner, HookProcessor):
             we need to run them here too.
         """
         self.process_hooks()
-        super(XmlDjangoTestSuiteRunner, self).setup_databases(*args, **kargs)
+        return super(XmlDjangoTestSuiteRunner, self).setup_databases(*args, **kargs)
 
     def build_suite(self, test_labels, extra_tests=None, **kwargs):
         """ Default behaviour is augmented to improve test discovery """
