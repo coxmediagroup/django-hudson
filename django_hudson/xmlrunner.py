@@ -54,6 +54,7 @@ from django.test.simple import build_suite, get_tests
 from django.db.models.loading import get_app
 from django.db.models.loading import get_apps as app_getter
 
+logger = logging.getLogger("django-hudson")
 
 class _TestInfo(object):
     """This class is used to keep useful information about the execution of a
@@ -380,6 +381,7 @@ class HookProcessor(object):
         """ boring helper:
               print some stuff if verbosity is flipped on
         """
+        logger.info(msg)
         if self.verbosity:
             print msg.format(**kargs)
 
@@ -388,8 +390,7 @@ class HookProcessor(object):
             NOTE: results are unused at this time, but maybe there is a reason to track them later.
         """
 
-        #print >> sys.stderr, 'sanity check: does djhudson show whats on stderr?'
-        print 'processing hooks for host "' + str(platform.node()) + '"'
+        self.report('Processing hooks for host "' + str(platform.node()) + '"')
 
         from django.conf import settings
         def panic(action, hook, err):
@@ -397,7 +398,7 @@ class HookProcessor(object):
             msg = msg.format(action=action, H=str(hook), exc=str(err))
             print msg
             #self.report(msg)
-            logging.error(msg)
+            logger.error(msg)
 
 
         hooks = getattr(settings, 'DJANGO_HUDSON_HOOKS', [])
@@ -418,9 +419,8 @@ class HookProcessor(object):
             except Exception, err:
                 panic('executing', hook, err)
             else:
-                #self.report("Executed djhudson hook: {f}".format(f=hook))
-                print "Executed djhudson hook: {f}".format(f=hook)
-        print "after running every hook, got results:",results
+                self.report("Executed djhudson hook: {f}".format(f=hook))
+        self.report("After running every hook, got results:\n\t{R}".format(R=results))
         return results
 
 
@@ -466,10 +466,9 @@ class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner, HookProcessor):
                             msg = "Discovered shadowed appname \"{A}\" but no tests were found"
                             msg_kargs = dict(A=app_module.__name__)
                         self.report(msg, **msg_kargs)
-
         return suite
 
-
+## NOTE: the code below is duplicated in medley
 def get_apps(name=None):
     """ gets all the apps matching <name> from app-cache, instead
         of just retrieving the first one.  when name==None, acts
