@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from dynamicsettings import importer; importer.install()
+
 from django.test import TestCase
 
 from django_hudson.management.commands.hudson import Command as HudsonCommand
