@@ -10,7 +10,6 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from django_hudson.management.commands.lint import Command as pylint
-from django_hudson.management.commands.xmltest import patch_for_test_db_setup
 from django_hudson.xmlrunner import XmlDjangoTestSuiteRunner
 
 
