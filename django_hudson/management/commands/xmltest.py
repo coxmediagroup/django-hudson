@@ -17,8 +17,8 @@ class Command(BaseCommand):
 
     def handle(self, *test_labels, **options):
         # delay this import, because south might import the world
-        from south.management.commands import patch_for_test_db_setup
-        patch_for_test_db_setup()
+        #from south.management.commands import patch_for_test_db_setup
+        #patch_for_test_db_setup()
         output_dir=options.get('output_dir')
 
         verbosity = int(options.get('verbosity', 1))
