@@ -407,19 +407,20 @@ class HookProcessor(object):
             if isinstance(hook, StringType):
                 name = hook.split('.')[-1]                # callable name comes at the end,
                 hook_mod = '.'.join(hook.split('.')[:-1]) # up until then it's modules
-                try:
-                    hook = getattr(_import(hook_mod), name)
-                except Exception, err:
-                    panic('importing', hook, err)
-                    continue
+                #try:
+                hook = getattr(_import(hook_mod), name)
+                #except Exception, err:
+                #panic('importing', hook, err)
+                #continue
             else:
                 raise TypeError, "HookProcessor.process_hooks: Elements in DJANGO_HUDSON_HOOKS should be importable strings."
 
-            try: results.append(hook())
-            except Exception, err:
-                panic('executing', hook, err)
-            else:
-                self.report("Executed djhudson hook: {f}".format(f=hook))
+            #try:
+            results.append(hook())
+            #except Exception, err:
+            #    panic('executing', hook, err)
+            #else:
+            self.report("Executed djhudson hook: {f}".format(f=hook))
         self.report("After running every hook, got results:\n\t{R}".format(R=results))
         return results
 
