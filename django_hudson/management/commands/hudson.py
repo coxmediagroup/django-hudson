@@ -31,6 +31,8 @@ class Command(BaseCommand):
         """
         Run pylint and test with coverage and xml reports
         """
+        # delay this import, because south might import the world
+        from south.management.commands import patch_for_test_db_setup
         patch_for_test_db_setup()
 
         verbosity = int(options.get('verbosity', 1))
