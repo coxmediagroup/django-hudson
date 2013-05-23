@@ -331,8 +331,9 @@ class XMLTestRunner(TextTestRunner):
 
     def run(self, test):
         "Run the given test case or test suite."
-        import os
-        raise Exception, os.environ['WORKSPACE']
+        utests_artifacts = os.path.join(
+            os.environ['WORKSPACE'], 'utests')
+
         try:
             # Prepare the test execution
             self._patch_standard_output()
@@ -340,6 +341,8 @@ class XMLTestRunner(TextTestRunner):
 
             # Print a nice header
             self.stream.writeln()
+            self.stream.writeln(
+                'Artifacts will go to: {0}'.format(utests_artifacts))
             self.stream.writeln('Running tests...')
             self.stream.writeln(result.separator2)
 
@@ -380,13 +383,22 @@ class XMLTestRunner(TextTestRunner):
             self._restore_standard_output()
 
         # aggregate any timing statistics here
-        from collections import defaultdict;
+        self.aggregate_timing_data(utests_artifacts, result)
+        return result
+
+    def aggregate_timing_data(self,utests_artifacts, result):
+        from collections import defaultdict
         csum = defaultdict(lambda: 0)
         for x in result.timings:
             csum[x.app] += x.time
+        import json, platform
+        time_data_file = os.path.join(
+            utests_artifacts,
+            'app_times_{0}.json'.format(platform.node()))
+        with open(time_data_file,'w') as fhandle:
+            fhandle.write(json.dumps(csum))
+        self.stream.writeln('Finished writing json data: '+str(csum))
 
-        # dooet
-        return result
 
 class HookProcessor(object):
     """ medley's test runner needs this too in order to act in a way
