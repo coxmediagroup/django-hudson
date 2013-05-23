@@ -41,7 +41,7 @@ class Command(BaseCommand):
         tasks = getattr(settings, 'HUDSON_TASKS',
                         ['pylint', 'coverage', 'tests'])
 
-        output_dir=options.get('output_dir')
+        output_dir = options.get('output_dir')
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
@@ -62,7 +62,9 @@ class Command(BaseCommand):
 
         failures = 0
         if 'tests' in tasks:
-            test_runner = XmlDjangoTestSuiteRunner(output_dir=output_dir, interactive=interactive, verbosity=verbosity)
+            test_runner = XmlDjangoTestSuiteRunner(output_dir=output_dir,
+                                                   interactive=interactive,
+                                                   verbosity=verbosity)
             failures = test_runner.run_tests(test_labels)
 
         #save coverage report

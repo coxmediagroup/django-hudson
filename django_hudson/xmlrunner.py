@@ -101,6 +101,7 @@ class _XMLTestResult(_TextTestResult):
         "Create a new instance of _XMLTestResult."
         _TextTestResult.__init__(self, stream, descriptions, verbosity)
         self.successes = []
+        self.timings = []
         self.callback = None
         self.elapsed_times = elapsed_times
 
@@ -139,6 +140,13 @@ class _XMLTestResult(_TextTestResult):
         "Called after execute each test method."
         _TextTestResult.stopTest(self, test)
         self.stop_time = time.time()
+        from medley.test_runners.timing import Record, cls2app
+        self.timings.append(
+            Record(time=self.stop_time - self.start_time,
+                   name=str(test),
+                   app=cls2app(test.__class__),
+                   )
+            )
 
         if self.callback and callable(self.callback):
             self.callback()
@@ -291,7 +299,6 @@ class _XMLTestResult(_TextTestResult):
                 # Assume that test_runner.output is a stream
                 test_runner.output.write(xml_content)
 
-
 class XMLTestRunner(TextTestRunner):
     """A test runner class that outputs the results in JUnit like XML files.
     """
@@ -324,7 +331,6 @@ class XMLTestRunner(TextTestRunner):
 
     def run(self, test):
         "Run the given test case or test suite."
-
         try:
             # Prepare the test execution
             self._patch_standard_output()
@@ -430,8 +436,10 @@ class XmlDjangoTestSuiteRunner(DjangoTestSuiteRunner, HookProcessor):
         self.output_dir = output_dir
 
     def run_suite(self, suite, **kwargs):
-        return XMLTestRunner(verbose = self.verbosity > 1,
-                             output = self.output_dir).run(suite)
+        self._xrunner = TimedXMLTestRunner(verbose = self.verbosity > 1,
+                                           output = self.output_dir)
+        self._xrunner_result = self._xrunner.run(suite)
+        return self._xrunner_result
 
     def setup_databases(self, *args, **kargs):
         """ database setup takes a long time, so just in case any of
@@ -504,3 +512,8 @@ def _import(name):
     for comp in components[1:]:
         mod = getattr(mod, comp)
     return mod
+
+
+class TimedXMLTestRunner(XMLTestRunner):
+    def _makeResult(self):
+        return TimedResult(self.stream, self.descriptions, self.verbosity)
