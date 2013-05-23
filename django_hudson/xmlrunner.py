@@ -331,6 +331,8 @@ class XMLTestRunner(TextTestRunner):
 
     def run(self, test):
         "Run the given test case or test suite."
+        import os
+        raise Exception,os.getcwd()
         try:
             # Prepare the test execution
             self._patch_standard_output()
@@ -377,6 +379,13 @@ class XMLTestRunner(TextTestRunner):
             pass
             self._restore_standard_output()
 
+        # aggregate any timing statistics here
+        from collections import defaultdict;
+        csum = defaultdict(lambda: 0)
+        for x in result.timings:
+            csum[x.app] += x.time
+
+        # dooet
         return result
 
 class HookProcessor(object):
