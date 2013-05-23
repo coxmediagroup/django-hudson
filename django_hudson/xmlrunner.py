@@ -332,7 +332,7 @@ class XMLTestRunner(TextTestRunner):
     def run(self, test):
         "Run the given test case or test suite."
         import os
-        raise Exception,os.getcwd()
+        raise Exception, os.environ['WORKSPACE']
         try:
             # Prepare the test execution
             self._patch_standard_output()
