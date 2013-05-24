@@ -90,6 +90,19 @@ class _TestInfo(object):
         return self.test_result._exc_info_to_string(self.err, \
             self.test_method)
 
+from collections import namedtuple
+Record = namedtuple('TestRecord', 'time app name'.split())
+def cls2app(cls):
+    import os, inspect
+    from django.db.models.loading import get_apps
+    clsdir = os.path.dirname(inspect.getfile(cls))
+    z = [ [modyool, os.path.dirname(modyool.__file__) ] for modyool in get_apps() ]
+    z1 = [ x for x in z if clsdir.startswith(x[1])]
+    # sorting by length should have the sideeffect of ordering subapps in front of apps
+    z2 = sorted(z1, cmp=lambda x,y: cmp(len(x[1]), len(y[1])))
+    if z2:
+        app_dotpath = '.'.join(z2[-1][0].__name__.split('.')[:-1])
+        return app_dotpath
 
 class _XMLTestResult(_TextTestResult):
     """A test result class that can express test results in a XML report.
@@ -140,7 +153,6 @@ class _XMLTestResult(_TextTestResult):
         "Called after execute each test method."
         _TextTestResult.stopTest(self, test)
         self.stop_time = time.time()
-        from medley.test_runners.timing import Record, cls2app
         self.timings.append(
             Record(time=self.stop_time - self.start_time,
                    name=str(test),
